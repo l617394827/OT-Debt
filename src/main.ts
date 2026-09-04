@@ -46,7 +46,8 @@ let aiSettings: AISettings = {
   promptId: 'balanced',
 };
 
-const today = new Date().toISOString().slice(0, 10);
+const localNow = new Date();
+const today = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}`;
 const currentMonth = today.slice(0, 7);
 
 type GuidePlatform = Exclude<ImportPlatform, 'auto'>;
@@ -747,10 +748,23 @@ fileInput.addEventListener('change', () => void loadFiles(fileInput.files ?? und
 dropzone.addEventListener('drop', (event) => void loadFiles(event.dataTransfer?.files));
 
 byId<HTMLButtonElement>('load-demo').addEventListener('click', () => {
-  chatInput.value = `2026-09-03 21:30 产品同事：首页按钮再换个橙色，明早要看\n2026-09-03 23:00 我：第六版已经发了\n2026-09-10 20:00 项目群：先等审批，稍后再给排期\n2026-09-10 22:30 我：审批还没下来\n2026-09-15 22:47 老板：@我 临时有个紧急需求，今晚调整一下\n2026-09-15 23:50 我：已发，请查收\n2026-09-21 19:30 系统：线上故障报警，支付接口异常\n2026-09-21 21:00 我：故障已恢复`;
-  showToast('匿名示例已放入，点“开始清算”就能看结果');
+  const todayOfMonth = Number(today.slice(8));
+  const latestCompletedDay = Math.max(1, todayOfMonth - 1);
+  const demoDate = (position: number): string => {
+    const day = Math.max(1, Math.ceil(latestCompletedDay * position));
+    return `${currentMonth}-${String(day).padStart(2, '0')}`;
+  };
+  const [dateA, dateB, dateC, dateD] = [0.25, 0.5, 0.75, 1].map(demoDate);
+  chatInput.value = `${dateA} 20:15 产品同事：首页按钮再换个橙色，明早要看
+${dateA} 21:30 我：第六版已经发了
+${dateB} 19:40 项目群：先等审批，稍后再给排期
+${dateB} 21:10 我：排期终于确认，收工
+${dateC} 22:10 老板：@我 临时有个紧急需求，今晚调整一下
+${dateC} 23:20 我：已发，请查收
+${dateD} 19:30 系统：线上故障报警，支付接口异常
+${dateD} 21:00 我：故障已恢复`;
+  showToast(`已放入本月${todayOfMonth > 1 ? '截至昨天' : '今天'}的匿名示例，点“开始清算”即可`);
 });
-
 function currentMonthOnly(items: OvertimeEvent[]): OvertimeEvent[] {
   return items.filter((item) => item.date.startsWith(currentMonth));
 }
